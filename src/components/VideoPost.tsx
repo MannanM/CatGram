@@ -1,46 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Cat, MessageCircle, Send, Music, Volume2, VolumeX } from 'lucide-react';
 
-// Safe counter to track active HTML5 video players in the browser DOM
-let activePlayersCount = 0;
-
-// Custom Cat Paw SVG Component
+// Custom Cat Paw SVG Component (unchanged)
 const CatPaw: React.FC<{ isLiked: boolean; className?: string }> = ({ isLiked, className = "" }) => {
   const padColor = isLiked ? "#E11D48" : "#FCE7F3";
   return (
-    <svg
-      viewBox="0 0 100 100"
-      className={className}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      width="100%"
-      height="100%"
-    >
-      <path
-        d="M26 100V50C26 40 19 36 15 28C11 17 22 7 32 14C37 9 46 8 50 12C54 8 63 9 68 14C78 7 89 17 85 28C81 36 74 40 74 50V100"
-        fill="#F3F4F6"
-        stroke="#111827"
-        strokeWidth="6"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-      <path
-        d="M50 12C54 8 63 9 68 14C78 7 89 17 85 28C81 36 74 40 74 50V100H65V50C65 42 70 38 74 31C77 24 71 15 65 19C61 15 54 15 51 18"
-        fill="#E5E7EB"
-      />
-      <path
-        d="M33 52C31 43 41 34 50 34C59 34 69 43 67 52C65 61 57 65 50 65C43 65 35 61 33 52Z"
-        fill={padColor}
-        stroke="#111827"
-        strokeWidth="5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M54 38C58 39 62 44 61 48"
-        stroke={isLiked ? "#FDA4AF" : "#FFFFFF"}
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+      <path d="M26 100V50C26 40 19 36 15 28C11 17 22 7 32 14C37 9 46 8 50 12C54 8 63 9 68 14C78 7 89 17 85 28C81 36 74 40 74 50V100" fill="#F3F4F6" stroke="#111827" strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M50 12C54 8 63 9 68 14C78 7 89 17 85 28C81 36 74 40 74 50V100H65V50C65 42 70 38 74 31C77 24 71 15 65 19C61 15 54 15 51 18" fill="#E5E7EB" />
+      <path d="M33 52C31 43 41 34 50 34C59 34 69 43 67 52C65 61 57 65 50 65C43 65 35 61 33 52Z" fill={padColor} stroke="#111827" strokeWidth="5" strokeLinejoin="round" />
+      <path d="M54 38C58 39 62 44 61 48" stroke={isLiked ? "#FDA4AF" : "#FFFFFF"} strokeWidth="3" strokeLinecap="round" />
       <ellipse cx="23" cy="29" rx="5.5" ry="7.5" transform="rotate(-18 23 29)" fill={padColor} stroke="#111827" strokeWidth="5" />
       <ellipse cx="39" cy="18" rx="6" ry="8.5" transform="rotate(-6 39 18)" fill={padColor} stroke="#111827" strokeWidth="5" />
       <ellipse cx="61" cy="18" rx="6" ry="8.5" transform="rotate(6 61 18)" fill={padColor} stroke="#111827" strokeWidth="5" />
@@ -49,7 +18,7 @@ const CatPaw: React.FC<{ isLiked: boolean; className?: string }> = ({ isLiked, c
   );
 };
 
-// Dedicated Video Component
+// Dedicated Video Component (unchanged from previous fix)
 interface ActualVideoPlayerProps {
   src: string;
   isMuted: boolean;
@@ -58,44 +27,47 @@ interface ActualVideoPlayerProps {
 
 const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onMuteFallback }) => {
   const ref = useRef<HTMLVideoElement>(null);
+  const onMuteFallbackRef = useRef(onMuteFallback);
 
-  // Monitor active video player mounts/unmounts in your browser console
   useEffect(() => {
-    activePlayersCount++;
-    console.log(`[CatGram Diagnostic] Video element MOUNTED. Active decoders in DOM: ${activePlayersCount}`);
+    onMuteFallbackRef.current = onMuteFallback;
+  }, [onMuteFallback]);
 
-    return () => {
-      activePlayersCount--;
-      console.log(`[CatGram Diagnostic] Video element UNMOUNTED. Active decoders in DOM: ${activePlayersCount}`);
-    };
-  }, []);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    video.defaultMuted = true;
+    video.muted = isMuted;
+  }, [isMuted]);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
 
+    let isCancelled = false;
     video.src = src;
     video.load();
 
-    video.play().catch(e => {
-      if (e.name === 'NotAllowedError') {
-        console.warn('Playback blocked by browser. Falling back to muted.');
-        onMuteFallback();
-      }
-    });
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => {
+        if (isCancelled) return;
+        if (e.name === 'NotAllowedError') {
+          console.warn('Playback blocked. Retrying muted.');
+          onMuteFallbackRef.current();
+          video.muted = true;
+          video.play().catch(err => console.error('Muted playback fallback failed:', err));
+        }
+      });
+    }
 
     return () => {
+      isCancelled = true;
       video.pause();
       video.removeAttribute('src');
       video.load();
     };
-  }, [src, onMuteFallback]);
-
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.muted = isMuted;
-    }
-  }, [isMuted]);
+  }, [src]);
 
   return (
     <video
@@ -104,13 +76,6 @@ const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onM
       loop
       playsInline
       webkit-playsinline="true"
-      onClick={() => {
-        if (ref.current?.paused) {
-          ref.current?.play().catch(() => {});
-        } else {
-          ref.current?.pause();
-        }
-      }}
     />
   );
 };
@@ -118,13 +83,21 @@ const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onM
 interface VideoPostProps {
   post: any;
   isActive: boolean;
+  isMuted: boolean;            // Lifted state
+  onMuteToggle: () => void;     // Lifted action
+  onMuteFallback: () => void;   // Lifted action
 }
 
-const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
+const VideoPost: React.FC<VideoPostProps> = ({
+  post,
+  isActive,
+  isMuted,
+  onMuteToggle,
+  onMuteFallback
+}) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isFaved, setIsFaved] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes);
-  const [isMuted, setIsMuted] = useState(false);
 
   const isTop = post.top !== false;
   const audioText = post.audio || `Original CatGram Audio - @${post.author?.replace('@', '')}`;
@@ -158,7 +131,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
   const handleLike = () => {
     playSound();
     setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    setLikeCount((prev: number) => isLiked ? prev - 1 : prev + 1);
   };
 
   const handleFave = () => {
@@ -168,19 +141,18 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMuted(!isMuted);
+    onMuteToggle(); // Trigger parent-level mute state change
   };
 
   return (
-    <div className="w-full h-screen h-[100dvh] snap-start bg-zinc-950 flex justify-center items-center p-0 md:p-4">
+    <div className="w-full h-full bg-zinc-950 flex justify-center items-center p-0 md:p-4">
       <div className="relative w-full h-full md:max-w-[450px] md:max-h-[800px] md:aspect-[9/16] md:rounded-2xl md:shadow-2xl overflow-hidden bg-black flex justify-center items-center">
 
-        {/* Video / Poster mounting switched purely via parent isActive prop */}
         {isActive ? (
           <ActualVideoPlayer
             src={post.url}
             isMuted={isMuted}
-            onMuteFallback={() => setIsMuted(true)}
+            onMuteFallback={onMuteFallback}
           />
         ) : (
           <div className="w-full h-full absolute inset-0 bg-zinc-950 z-0">
@@ -189,6 +161,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
                 src={posterUrl}
                 alt=""
                 className="w-full h-full object-cover opacity-80"
+                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs">
@@ -198,14 +171,12 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
           </div>
         )}
 
-        {/* Dynamic Gradient */}
         <div className={`absolute inset-0 pointer-events-none z-10 ${
           isTop
             ? 'bg-gradient-to-b from-black/80 via-black/10 to-transparent'
             : 'bg-gradient-to-t from-black/80 via-black/10 to-transparent'
         }`} />
 
-        {/* Mute/Unmute Indicator */}
         <button
           onClick={toggleMute}
           className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/20 border border-white/10 text-white backdrop-blur-sm transition-opacity hover:bg-black/40 active:scale-95 pointer-events-auto"
@@ -213,9 +184,7 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
 
-        {/* Right Side Actions */}
         <div className="absolute right-4 bottom-20 flex flex-col items-center space-y-5 z-20 pointer-events-auto">
-          {/* Author Avatar */}
           <div className="relative group cursor-pointer">
             <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden bg-zinc-800 shadow-md transform transition-transform group-hover:scale-110">
               <img
@@ -233,7 +202,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
             </div>
           </div>
 
-          {/* Like Button */}
           <button onClick={handleLike} className="flex flex-col items-center group transition-transform active:scale-90">
             <div className="p-1 rounded-full bg-black/20 border border-white/10 backdrop-blur-sm shadow-md transition-colors duration-300">
               <div className="w-[34px] h-[34px] p-0.5">
@@ -243,7 +211,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
             <span className="text-white text-xs font-semibold mt-1 drop-shadow-md">{likeCount}</span>
           </button>
 
-          {/* Favorite Button */}
           <button onClick={handleFave} className="flex flex-col items-center group transition-transform active:scale-90">
             <div className={`p-2 rounded-full bg-black/20 border border-white/10 backdrop-blur-sm shadow-md transition-colors duration-300 ${isFaved ? 'text-yellow-400' : 'text-white'}`}>
               <Cat size={22} className={`transition-all duration-300 ${isFaved ? 'fill-yellow-400 scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : ''}`} />
@@ -251,7 +218,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
             <span className="text-white text-xs font-semibold mt-1 drop-shadow-md">Fave</span>
           </button>
 
-          {/* Comment Button (Disabled) */}
           <button className="flex flex-col items-center group cursor-not-allowed opacity-50">
             <div className="p-2 rounded-full bg-black/20 border border-white/10 backdrop-blur-sm shadow-md text-gray-400">
               <MessageCircle size={22} />
@@ -259,7 +225,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
             <span className="text-gray-400 text-xs font-semibold mt-1 drop-shadow-md">{post.comments}</span>
           </button>
 
-          {/* Share Button */}
           <button
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
@@ -274,7 +239,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
           </button>
         </div>
 
-        {/* Dynamic Metadata Container */}
         <div className={`absolute left-4 z-20 pointer-events-auto ${
           isTop
             ? 'top-4 right-16'
@@ -289,7 +253,6 @@ const VideoPost: React.FC<VideoPostProps> = ({ post, isActive }) => {
           <h3 className="text-white font-bold text-sm mb-1 drop-shadow-lg">{post.author}</h3>
           <p className="text-white text-sm mb-3 drop-shadow-md line-clamp-2">{post.description}</p>
 
-          {/* Audio Track Info */}
           <div className="flex items-center space-x-2 bg-black/30 backdrop-blur-sm rounded-full py-1 px-3 w-max max-w-full">
             <Music size={14} className="text-white animate-spin-slow" />
             <div className="overflow-hidden w-full">

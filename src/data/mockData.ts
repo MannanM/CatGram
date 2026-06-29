@@ -6,10 +6,12 @@ export interface VideoPostData {
   url: string;
   title: string;
   description: string;
+  audio: string | null;
   likes: number;
   comments: number;
   author: string;
   authorAvatar: string;
+  top: boolean | null;
 }
 
 export const mockVideos: VideoPostData[] = [
@@ -55,6 +57,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/ROWD1499.MP4",
     title: "I like bugs",
     description: "They say adopt don't shop, but I say adopt bugs! #catlife #funny",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@country_cat",
@@ -66,10 +69,12 @@ export const mockVideos: VideoPostData[] = [
     url: "/QQWS4307.MP4",
     title: "Whimsical AND FUN",
     description: "Every two cat house hold is the same #cat #fun #whimsical",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@rick_and_morty",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=QQWS4307"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=QQWS4307",
+    top: true
   },
   {
     id: "19",
@@ -80,13 +85,15 @@ export const mockVideos: VideoPostData[] = [
     likes: 34200,
     comments: 1120,
     author: "@AKotSK",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=GMNR9663"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=GMNR9663",
+    top: true
   },
   {
     id: "18",
     url: "/PISG0917.MP4",
     title: "99 Luft balloons",
     description: "Two cats, one brain cell #catlife #funny",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@politically_incorrect",
@@ -110,6 +117,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/OMDP8269.MP4",
     title: "For your safety",
     description: "Ahohy #spongebob #funny #catlife",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@truth_hurts",
@@ -121,6 +129,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/MFMY2685.MP4",
     title: "U & ME",
     description: "We are just to sexy! #funny #sexy",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@truth_hurts",
@@ -132,6 +141,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/KVOL4553.MP4",
     title: "Unemployed",
     description: "Straight to jail! #funny",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@judge",
@@ -143,6 +153,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/JYYQ3436.MP4",
     title: "How?!",
     description: "Too cute to be true! #catlife #cute",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@roseglasses",
@@ -154,20 +165,24 @@ export const mockVideos: VideoPostData[] = [
     url: "/IKZX6045.MP4",
     title: "Hortchata",
     description: "Funny or red flag #political #redflag",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@red_flag",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=IKZX6045"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=IKZX6045",
+    top: true
   },
   {
     id: "11",
     url: "/HMPC4097.MP4",
     title: "Whimsical AND FUN",
     description: "Every two cat house hold is the same #cat #fun #whimsical",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@rick_and_morty",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=HMPC4097"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=HMPC4097",
+    top: true
   },
   {
     id: "10",
@@ -186,6 +201,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/GHQB3623.MP4",
     title: "Garbage Can Cat",
     description: "No hate like sibling hate #catlife #sibling",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@mean_sibling",
@@ -197,6 +213,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/EUEY5459.MP4",
     title: "Kalaminonononon",
     description: "I hex you to cure your tummy ache #catlife #catbrain",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@witchy_meow",
@@ -208,6 +225,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/DOPI6930.MP4",
     title: "How can I stay mad",
     description: "When their brain prob sounds like this #catlife #catbrain",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@littleCatBrain",
@@ -219,6 +237,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/DEHL3018.MP4",
     title: "Little Reason",
     description: "Mummies little reason to keep going #nihilism #catlife",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@grumpy_cat_mum",
@@ -230,6 +249,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/CYZM1527.MP4",
     title: "Just keep going! 🐾",
     description: "#nihilism #catlife",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@to_be_or_not_to_be",
@@ -241,6 +261,7 @@ export const mockVideos: VideoPostData[] = [
     url: "/AAMI8773.MP4",
     title: "She's Bald! 🐈",
     description: "I can't judge though. #catlife #baldness",
+    audio: null,
     likes: 12450,
     comments: 420,
     author: "@chrome_dome",
@@ -252,29 +273,35 @@ export const mockVideos: VideoPostData[] = [
     url: "/ANWO8272.MP4",
     title: "Golem is not happy!",
     description: "What did you call me? 😾",
+    audio: null,
     likes: 8900,
     comments: 215,
     author: "@lotr_fan",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ANWO8272"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ANWO8272",
+    top: true
   },
   {
     id: "3",
     url: "/BJWT2319.MP4",
     title: "Wise Words",
     description: "Makes sense! #confucius #wisdom",
+    audio: null,
     likes: 34200,
     comments: 1120,
     author: "@confucius",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=BJWT2319"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=BJWT2319",
+    top: true
   },
   {
     id: "4",
     url: "/CYQW5886.MP4",
     title: "Brine of the Times 🦐",
     description: "Shrimp and cat, a tale of friendship. #catandshrimp #friendship",
+    audio: "Brine of the Times Song by Harry Styles ‧ 2017",
     likes: 34200,
     comments: 1120,
     author: "@sad_song",
-    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CYQW5886"
+    authorAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CYQW5886",
+    top: true
   }
 ];
