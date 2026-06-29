@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Cat, PawPrint, MessageCircle, Send, MoreHorizontal, Music } from 'lucide-react';
+import { Cat, PawPrint, MessageCircle, Send, Music } from 'lucide-react';
 import type { VideoPostData } from '../data/mockData';
 
 interface VideoPostProps {

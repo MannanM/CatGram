@@ -1,4 +1,3 @@
-import React from 'react';
 import { Home, Search, PlusSquare, Clapperboard, User, Cat } from 'lucide-react';
 import ReelsFeed from './components/ReelsFeed';
 
