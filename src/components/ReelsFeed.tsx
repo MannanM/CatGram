@@ -4,10 +4,9 @@ import { mockVideos } from '../data/mockData';
 
 const ReelsFeed: React.FC = () => {
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true); // Global mute state (defaults to true)
+  const [isMuted, setIsMuted] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Handlers to pass to children
   const handleMuteToggle = () => setIsMuted((prev) => !prev);
   const handleMuteFallback = () => setIsMuted(true);
 
@@ -43,7 +42,8 @@ const ReelsFeed: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[calc(100vh-4rem)] sm:h-[calc(100vh-4rem)] overflow-y-scroll snap-y snap-mandatory bg-black hide-scrollbar relative"
+      // Using 100dvh instead of 100vh ensures the container resizes to exclude mobile browser toolbars
+      className="w-full h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-4rem)] overflow-y-scroll snap-y snap-mandatory bg-black hide-scrollbar relative"
       style={{ scrollBehavior: 'smooth' }}
     >
       {mockVideos.map((post, index) => (

@@ -1,5 +1,6 @@
 import { Home, Search, PlusSquare, Clapperboard, User, Cat } from 'lucide-react';
 import ReelsFeed from './components/ReelsFeed';
+import { ReloadPrompt } from './components/ReloadPrompt';
 
 const Navigation = () => {
   const navItems = [
@@ -49,6 +50,7 @@ const App = () => {
         </main>
 
         <Navigation />
+        <ReloadPrompt />
       </div>
     </div>
   );

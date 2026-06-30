@@ -18,14 +18,14 @@ const CatPaw: React.FC<{ isLiked: boolean; className?: string }> = ({ isLiked, c
   );
 };
 
-// Dedicated Video Component (unchanged from previous fix)
 interface ActualVideoPlayerProps {
   src: string;
   isMuted: boolean;
+  isActive: boolean;
   onMuteFallback: () => void;
 }
 
-const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onMuteFallback }) => {
+const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, isActive, onMuteFallback }) => {
   const ref = useRef<HTMLVideoElement>(null);
   const onMuteFallbackRef = useRef(onMuteFallback);
 
@@ -33,6 +33,7 @@ const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onM
     onMuteFallbackRef.current = onMuteFallback;
   }, [onMuteFallback]);
 
+  // Handle mute changes
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
@@ -40,39 +41,47 @@ const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onM
     video.muted = isMuted;
   }, [isMuted]);
 
+  // Handle active playback cycle on persistent DOM elements
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
 
     let isCancelled = false;
-    video.src = src;
-    video.load();
 
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(e => {
-        if (isCancelled) return;
-        if (e.name === 'NotAllowedError') {
-          console.warn('Playback blocked. Retrying muted.');
-          onMuteFallbackRef.current();
-          video.muted = true;
-          video.play().catch(err => console.error('Muted playback fallback failed:', err));
-        }
-      });
+    if (isActive) {
+      video.src = src;
+      video.load();
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          if (isCancelled) return;
+          if (e.name === 'NotAllowedError') {
+            console.warn('Playback blocked. Retrying muted.');
+            onMuteFallbackRef.current();
+            video.muted = true;
+            video.play().catch(err => console.error('Muted fallback failed:', err));
+          }
+        });
+      }
+    } else {
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
     }
 
     return () => {
       isCancelled = true;
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
     };
-  }, [src]);
+  }, [isActive, src]);
 
   return (
     <video
       ref={ref}
-      className="w-full h-full object-cover absolute inset-0 z-10"
+      // Changed to object-contain so the video fits inside the screen without cropping
+      className={`w-full h-full object-contain absolute inset-0 z-10 transition-opacity duration-300 ${
+        isActive ? 'opacity-100' : 'opacity-0'
+      }`}
       loop
       playsInline
       webkit-playsinline="true"
@@ -83,9 +92,9 @@ const ActualVideoPlayer: React.FC<ActualVideoPlayerProps> = ({ src, isMuted, onM
 interface VideoPostProps {
   post: any;
   isActive: boolean;
-  isMuted: boolean;            // Lifted state
-  onMuteToggle: () => void;     // Lifted action
-  onMuteFallback: () => void;   // Lifted action
+  isMuted: boolean;
+  onMuteToggle: () => void;
+  onMuteFallback: () => void;
 }
 
 const VideoPost: React.FC<VideoPostProps> = ({
@@ -141,26 +150,29 @@ const VideoPost: React.FC<VideoPostProps> = ({
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onMuteToggle(); // Trigger parent-level mute state change
+    onMuteToggle();
   };
 
   return (
     <div className="w-full h-full bg-zinc-950 flex justify-center items-center p-0 md:p-4">
       <div className="relative w-full h-full md:max-w-[450px] md:max-h-[800px] md:aspect-[9/16] md:rounded-2xl md:shadow-2xl overflow-hidden bg-black flex justify-center items-center">
 
-        {isActive ? (
-          <ActualVideoPlayer
-            src={post.url}
-            isMuted={isMuted}
-            onMuteFallback={onMuteFallback}
-          />
-        ) : (
+        {/* Video Player (Always mounted to retain user-gesture context on iOS Chrome) */}
+        <ActualVideoPlayer
+          src={post.url}
+          isMuted={isMuted}
+          isActive={isActive}
+          onMuteFallback={onMuteFallback}
+        />
+
+        {/* Poster Fallback (Hides when active) */}
+        {!isActive && (
           <div className="w-full h-full absolute inset-0 bg-zinc-950 z-0">
             {posterUrl ? (
               <img
                 src={posterUrl}
                 alt=""
-                className="w-full h-full object-cover opacity-80"
+                className="w-full h-full object-contain opacity-80"
                 loading="lazy"
               />
             ) : (
@@ -184,7 +196,8 @@ const VideoPost: React.FC<VideoPostProps> = ({
           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
 
-        <div className="absolute right-4 bottom-20 flex flex-col items-center space-y-5 z-20 pointer-events-auto">
+        {/* Right Side Actions with iOS safe area spacing */}
+        <div className="absolute right-4 bottom-24 flex flex-col items-center space-y-5 z-20 pointer-events-auto pb-[env(safe-area-inset-bottom)]">
           <div className="relative group cursor-pointer">
             <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden bg-zinc-800 shadow-md transform transition-transform group-hover:scale-110">
               <img
@@ -239,10 +252,11 @@ const VideoPost: React.FC<VideoPostProps> = ({
           </button>
         </div>
 
-        <div className={`absolute left-4 z-20 pointer-events-auto ${
+        {/* Dynamic Metadata Container with iOS safe area spacing */}
+        <div className={`absolute left-4 z-20 pointer-events-auto pb-[env(safe-area-inset-bottom)] ${
           isTop
-            ? 'top-4 right-16'
-            : 'bottom-6 right-20'
+            ? 'top-20 right-16' // Adjusted from top-4 to top-20 to clear the top CatGram logo header
+            : 'bottom-10 right-20' // Adjusted from bottom-6 to bottom-10 to stay safely above screen corners
         }`}>
           {post.title && (
             <h2 className="text-yellow-400 font-extrabold text-base md:text-lg mb-0.5 tracking-wide drop-shadow-md uppercase">
